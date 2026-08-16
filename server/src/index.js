@@ -1,11 +1,16 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 const app = express();
 
-// 1. FIXED: Open CORS completely to allow your Netlify domain to connect seamlessly
+// 1. Establish path names manually for modern ES module scopes
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 2. Open CORS completely to allow your Netlify domain to connect
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -14,7 +19,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// 2. Mock Database Structure (Replace with your custom db logic if needed)
+// 3. Database Layer Setup
 const DB_FILE = path.join(__dirname, '../data/db.json');
 const ensureDbExists = () => {
     const dir = path.dirname(DB_FILE);
@@ -23,12 +28,12 @@ const ensureDbExists = () => {
 };
 ensureDbExists();
 
-// 3. Central Landing Route (Bypasses the "Cannot GET /" screen with a clean message)
+// 4. Central Route
 app.get('/', (req, res) => {
-    res.json({ status: "online", message: "BotForge Backend API is running smoothly!" });
+    res.json({ status: "online", message: "BotForge Backend API running on ESM!" });
 });
 
-// 4. Standard Authentication API Routes
+// 5. Authentication API Routes
 app.post('/api/auth/register', (req, res) => {
     try {
         const { username, password } = req.body;
@@ -60,19 +65,7 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-// 5. Discord Bot Deployment Manager Route Placeholder
-app.post('/api/bots/deploy', (req, res) => {
-    const { token, template, userId } = req.body;
-    if (!token) return res.status(400).json({ error: "Discord token required" });
-    
-    // Log intent to console for validation tracking in Render logs
-    console.log(`Attempting dynamic bot launch for user ${userId} with template ${template}`);
-    
-    // Standard successful initialization mock back to frontend UI dashboard
-    res.json({ success: true, message: "Bot initializing process launched successfully." });
-});
-
-// 6. FIXED: Bind to 0.0.0.0 and process.env.PORT to satisfy Render network requirements
+// 6. Bind to 0.0.0.0 and process.env.PORT for Render compliance
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server successfully deployed and running on port ${PORT}`);
